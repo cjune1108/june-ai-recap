@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import {
   HelpCircle,
   Globe,
@@ -16,6 +16,7 @@ import {
   Puzzle,
   Settings,
   ChevronRight,
+  ChevronLeft,
   ChevronDown,
   FileText,
   ClipboardList,
@@ -39,9 +40,10 @@ import {
   TreePine,
   NotebookPen,
   Expand,
+  Check,
 } from 'lucide-react'
 
-type Page = 'challenge' | 'ide' | 'complete' | 'welcome'
+type Page = 'analyzing' | 'challenge' | 'ide' | 'complete' | 'welcome'
 type RightPanel = 'instructions' | 'coach'
 
 // ─── Shared Components ───
@@ -83,6 +85,235 @@ function CourseSidebar() {
     <div className="w-[52px] shrink-0 bg-white rounded-2xl flex flex-col items-center pt-4 h-full">
       <button className="p-1.5 rounded hover:bg-black/5 transition-colors"><PanelLeft className="w-5 h-5 text-text-muted" /></button>
       <div className="w-8 h-px bg-border mt-3" />
+    </div>
+  )
+}
+
+/** Proactive AI MVP — course analysis (Figma node 27-36386) */
+function ProactiveSparkleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <defs>
+        <linearGradient id="proactive-sparkle-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#6366F1" />
+          <stop offset="1" stopColor="#2563EB" />
+        </linearGradient>
+      </defs>
+      <path d="M10 3L12.5 9.5L19 12L12.5 14.5L10 21L7.5 14.5L1 12L7.5 9.5L10 3Z" fill="url(#proactive-sparkle-grad)" />
+      <path d="M18 1L19.125 4.125L22.25 5.25L19.125 6.375L18 9.5L16.875 6.375L13.75 5.25L16.875 4.125L18 1Z" fill="url(#proactive-sparkle-grad)" />
+    </svg>
+  )
+}
+
+function PersonalizationCard3DIcon() {
+  return (
+    <div
+      className="h-12 w-12 shrink-0 rounded-xl bg-gradient-to-br from-[#f9a8d4] via-[#a78bfa] to-[#38bdf8] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] ring-1 ring-black/[0.06]"
+      aria-hidden
+    />
+  )
+}
+
+const analysisSteps = [
+  { id: 'thinking', text: 'Thinking...', muted: true },
+  { id: 'm1', text: 'Analyzing course module 1 content', muted: false },
+  { id: 'career', text: 'Analyze career goal and skill level', muted: false },
+  { id: 'removing', text: 'Removing intro course and simple tasks', muted: false },
+  { id: 'm2', text: 'Analyzing course module 2 content', muted: false },
+] as const
+
+function ProactiveAnalysisPage({ onContinue }: { onContinue: () => void }) {
+  const [progress, setProgress] = useState(0)
+  const [visibleStepCount, setVisibleStepCount] = useState(0)
+  const [careerDone, setCareerDone] = useState(false)
+  const [analysisReady, setAnalysisReady] = useState(false)
+  const bottomInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const start = performance.now()
+    const duration = 2600
+    let raf = 0
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration)
+      setProgress(Math.round(t * 35))
+      if (t < 1) raf = requestAnimationFrame(tick)
+      else setAnalysisReady(true)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  useEffect(() => {
+    const stepDelays = [180, 420, 700, 1050, 1400]
+    const timers = stepDelays.map((ms, i) =>
+      setTimeout(() => setVisibleStepCount((c) => Math.max(c, i + 1)), ms),
+    )
+    const careerTimer = setTimeout(() => setCareerDone(true), 2100)
+    return () => {
+      timers.forEach(clearTimeout)
+      clearTimeout(careerTimer)
+    }
+  }, [])
+
+  return (
+    <div className="flex flex-1 gap-4 px-4 pb-4 min-h-0">
+      <CourseSidebar />
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <div className="mx-auto flex w-full max-w-[1100px] flex-col px-6 py-6 sm:px-10 sm:py-8">
+            {/* Inner toolbar — matches assistant chrome in reference */}
+            <div className="mb-6 flex items-center justify-between">
+              <ProactiveSparkleIcon className="h-5 w-5 shrink-0" />
+              <div className="flex items-center gap-0.5">
+                <button type="button" className="rounded-lg p-2 transition-colors hover:bg-gray-100" aria-label="New">
+                  <Plus className="h-5 w-5 text-text-muted" strokeWidth={1.8} />
+                </button>
+                <button type="button" className="rounded-lg p-2 transition-colors hover:bg-gray-100" aria-label="Settings">
+                  <Settings className="h-5 w-5 text-text-muted" strokeWidth={1.8} />
+                </button>
+                <button type="button" className="rounded-lg p-2 transition-colors hover:bg-gray-100" aria-label="Close">
+                  <X className="h-5 w-5 text-text-muted" strokeWidth={1.8} />
+                </button>
+              </div>
+            </div>
+
+            <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em] text-text-dark sm:text-[32px]">
+              Hi June!
+            </h1>
+            <h2 className="mt-2 text-xl font-bold leading-snug text-text-dark sm:text-[22px]">
+              Welcome to Generative AI Content Creation course!
+            </h2>
+            <p className="mt-4 max-w-[720px] text-base leading-7 text-text-muted">
+              We&apos;ve tailored this experience using your profile, goals, and activity in Coursera. As you learn, we
+              keep refining what we show you so it stays relevant to your role and pace.
+            </p>
+            <p className="mt-3 max-w-[720px] text-base leading-7 text-text-muted">
+              Take a moment to review the highlights below while we finish analyzing the course for you.
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <div className="flex gap-4 rounded-2xl bg-[#F0F8FF] p-4 transition-shadow hover:bg-[#e8f4ff] hover:shadow-md">
+                <PersonalizationCard3DIcon />
+                <div className="min-w-0">
+                  <p className="font-bold text-text-dark">Relevant skills</p>
+                  <p className="mt-1 text-[15px] font-normal leading-6 text-text-dark/90">ChatGPT, Data Sets</p>
+                </div>
+              </div>
+              <div className="flex gap-4 rounded-2xl bg-[#F0F8FF] p-4 transition-shadow hover:bg-[#e8f4ff] hover:shadow-md">
+                <PersonalizationCard3DIcon />
+                <div className="min-w-0">
+                  <p className="font-bold text-text-dark">Your goal</p>
+                  <p className="mt-1 text-[15px] font-normal leading-6 text-text-dark/90">
+                    Leverage Generative AI in my product manager role and focus on Claude Code &amp; Cursor vibe coding
+                    tools
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-10">
+              <div className="flex flex-wrap items-center gap-2">
+                <ProactiveSparkleIcon className="h-5 w-5 shrink-0" />
+                <p className="text-base font-bold text-text-dark">
+                  Analyzing course <span className="tabular-nums">{progress}</span>%
+                </p>
+              </div>
+              <div
+                className="mt-3 h-1.5 w-full max-w-md overflow-hidden rounded-full bg-[#E8EEF7]"
+                role="progressbar"
+                aria-valuenow={progress}
+                aria-valuemin={0}
+                aria-valuemax={35}
+              >
+                <div
+                  className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
+                  style={{ width: `${(progress / 35) * 100}%` }}
+                />
+              </div>
+
+              <ul className="mt-5 flex flex-col gap-2.5">
+                {analysisSteps.map((step, i) => {
+                  const visible = i < visibleStepCount
+                  const isCareer = step.id === 'career'
+                  const showCheck = isCareer && careerDone
+                  return (
+                    <li
+                      key={step.id}
+                      className={`flex items-start gap-2.5 text-[15px] leading-6 transition-opacity duration-300 ${
+                        visible ? 'opacity-100 animate-hint-in' : 'pointer-events-none opacity-0'
+                      } ${step.muted || (isCareer && !careerDone) ? 'text-text-muted' : 'text-text-dark/85'}`}
+                    >
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
+                        {showCheck ? (
+                          <Check className="h-4 w-4 text-emerald-600" strokeWidth={2.5} aria-hidden />
+                        ) : (
+                          <span className="h-1.5 w-1.5 rounded-full bg-text-muted/50" aria-hidden />
+                        )}
+                      </span>
+                      <span>{step.text}</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+
+            {analysisReady && (
+              <div className="mt-8 animate-hint-in">
+                <button
+                  type="button"
+                  onClick={onContinue}
+                  className="rounded-lg bg-primary px-6 py-2.5 text-base font-semibold text-white transition-colors hover:bg-primary-hover"
+                >
+                  Continue to lab exercise
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="shrink-0 border-t border-border/60 bg-white px-6 pb-5 pt-4 sm:px-10">
+          <div className="mx-auto max-w-[1100px]">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => bottomInputRef.current?.focus()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  bottomInputRef.current?.focus()
+                }
+              }}
+              className="flex cursor-text items-center gap-3 rounded-full border border-transparent bg-[#F3F4F6] px-4 py-3 outline-none ring-primary/30 transition-shadow focus-within:border-primary/25 focus-within:ring-2"
+            >
+              <Mic className="h-5 w-5 shrink-0 text-text-muted" strokeWidth={1.75} aria-hidden />
+              <input
+                ref={bottomInputRef}
+                type="text"
+                placeholder="Message..."
+                className="min-w-0 flex-1 bg-transparent text-base text-text-dark placeholder:text-text-muted/80 outline-none"
+                aria-label="Message"
+              />
+              <button
+                type="button"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-colors hover:bg-primary-hover"
+                aria-label="Send"
+              >
+                <ArrowUp className="h-5 w-5" strokeWidth={2.25} />
+              </button>
+            </div>
+            <p className="mt-4 text-center text-[11px] leading-5 text-text-muted/90 sm:text-xs">
+              This feature is powered by AI, so check for mistakes and don&apos;t share sensitive information.{' '}
+              <a
+                href="#"
+                className="underline decoration-text-muted/50 underline-offset-2 transition-colors hover:text-primary"
+              >
+                Learn More
+              </a>
+              .
+            </p>
+          </div>
+        </div>
+      </main>
     </div>
   )
 }
@@ -1073,6 +1304,150 @@ function WelcomeChipSparkle({ className }: { className?: string }) {
 const SKILL_SHARE_PROMPT =
   'Share my skill level for better personalization'
 
+const RECAP_USER_PROMPT = 'Recap what I learned from last session'
+
+/** Quick Recap flashcards — Proactive AI MVP (Figma node 8:13594) */
+const recapCards: { front: string; back: string }[] = [
+  {
+    front:
+      'I can clean and reformat messy datasets—such as fixing inconsistent date formats, categories, or text labels—to prepare them for analysis.',
+    back: 'Data cleaning reduces bias and errors before visualization or modeling.',
+  },
+  {
+    front: 'A clear prompt should state the goal, audience, and constraints in plain language.',
+    back: 'Context + constraints steer the model toward useful, on-topic outputs.',
+  },
+  {
+    front: 'Few-shot prompting means giving a couple of examples before the actual task.',
+    back: 'Examples teach the format and tone you want without long explanations.',
+  },
+  {
+    front: 'HTML provides structure; CSS controls presentation and layout.',
+    back: 'Separation of structure and style makes pages easier to maintain.',
+  },
+  {
+    front: 'Semantic tags like <nav> and <main> help accessibility and SEO.',
+    back: 'Screen readers and search engines use structure to understand the page.',
+  },
+  {
+    front: 'Flexbox is useful for aligning items in a row or column within a container.',
+    back: 'Use justify-content and align-items to distribute space along axes.',
+  },
+  {
+    front: 'Iteration means revising prompts based on what the model got wrong.',
+    back: 'Treat prompting like debugging: change one variable at a time.',
+  },
+  {
+    front: 'Correlation does not imply causation—two trends can rise together by coincidence.',
+    back: 'Always ask what third factors might explain both variables.',
+  },
+  {
+    front: 'A README in a repo should explain setup, usage, and ownership.',
+    back: 'Good docs shorten onboarding for teammates and your future self.',
+  },
+  {
+    front: 'Version control lets you track changes and collaborate without overwriting work.',
+    back: 'Commits should be small and described so history stays understandable.',
+  },
+  {
+    front: 'Large language models can hallucinate facts; verify critical claims.',
+    back: 'Use authoritative sources when accuracy matters for decisions.',
+  },
+  {
+    front: 'Personalized learning paths adapt tasks to your goals and prior performance.',
+    back: 'Regular practice on weak areas builds durable skills faster.',
+  },
+]
+
+function QuickRecapFlashcards() {
+  const [idx, setIdx] = useState(0)
+  const [flipped, setFlipped] = useState(false)
+
+  useEffect(() => {
+    setFlipped(false)
+  }, [idx])
+
+  const card = recapCards[idx]
+  const total = recapCards.length
+
+  return (
+    <div className="w-full max-w-full animate-hint-in rounded-2xl border border-[#e4e9f0] bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.08)] sm:p-6">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h3 className="text-lg font-bold tracking-[-0.02em] text-text-dark sm:text-xl">Quick Recap</h3>
+          <p className="mt-1 text-sm leading-5 text-text-muted">
+            Take a moment to review what you&apos;ve learned to help it stick
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1 self-start rounded-lg border border-border bg-[#fafbfc] px-1 py-0.5 text-sm text-text-muted">
+          <button
+            type="button"
+            className="rounded p-1.5 transition-colors hover:bg-black/[0.06] disabled:pointer-events-none disabled:opacity-30"
+            aria-label="Previous card"
+            disabled={idx <= 0}
+            onClick={() => setIdx((i) => Math.max(0, i - 1))}
+          >
+            <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+          </button>
+          <span className="min-w-[3rem] select-none text-center text-xs font-medium tabular-nums text-text-dark sm:text-sm">
+            {idx + 1}/{total}
+          </span>
+          <button
+            type="button"
+            className="rounded p-1.5 transition-colors hover:bg-black/[0.06] disabled:pointer-events-none disabled:opacity-30"
+            aria-label="Next card"
+            disabled={idx >= total - 1}
+            onClick={() => setIdx((i) => Math.min(total - 1, i + 1))}
+          >
+            <ChevronRight className="h-4 w-4" strokeWidth={2} />
+          </button>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setFlipped((f) => !f)}
+        className="relative w-full rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+        aria-label={flipped ? 'Show question' : 'Show answer'}
+      >
+        <div className="relative min-h-[220px] sm:min-h-[240px]" style={{ perspective: '1000px' }}>
+          <div
+            className="relative h-full min-h-[220px] w-full transition-transform duration-500 ease-out sm:min-h-[240px]"
+            style={{
+              transformStyle: 'preserve-3d',
+              transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+            }}
+          >
+            <div
+              className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-xl bg-[#f8fafc] px-5 py-8 sm:px-8"
+              style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+            >
+              <p className="text-center text-lg font-bold leading-7 tracking-[-0.02em] text-text-dark sm:text-xl sm:leading-8">
+                {card.front}
+              </p>
+            </div>
+            <div
+              className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-xl bg-[#f0f6ff] px-5 py-8 sm:px-8"
+              style={{
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                transform: 'rotateY(180deg)',
+              }}
+            >
+              <p className="text-center text-base font-medium leading-7 text-text-dark sm:text-lg sm:leading-8">
+                {card.back}
+              </p>
+            </div>
+          </div>
+        </div>
+        <p className="mt-4 text-center text-sm font-semibold text-primary transition-colors hover:text-primary-hover">
+          Click to Flip
+        </p>
+      </button>
+    </div>
+  )
+}
+
 /** Figma Proactive-AI-Learning-Vision — skill assessment card (node 358:15570) */
 function SkillAssessmentCard() {
   const levels = [
@@ -1127,6 +1502,48 @@ function SkillAssessmentCard() {
   )
 }
 
+type WelcomeStreamEntry =
+  | { id: string; type: 'user_bubble'; text: string }
+  | { id: string; type: 'typing' }
+  | { id: string; type: 'skill_assessment' }
+  | { id: string; type: 'flashcards' }
+
+function streamEntryId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+}
+
+/** Insert right after the entry with `parentId` so delayed replies stay grouped with their user turn. */
+function insertWelcomeEntryAfterParent(
+  items: WelcomeStreamEntry[],
+  parentId: string,
+  entry: WelcomeStreamEntry,
+): WelcomeStreamEntry[] {
+  const i = items.findIndex((e) => e.id === parentId)
+  if (i === -1) return [...items, entry]
+  return [...items.slice(0, i + 1), entry, ...items.slice(i + 1)]
+}
+
+/** Last index of `type` in `items`, or -1. */
+function lastIndexOfType(items: WelcomeStreamEntry[], type: WelcomeStreamEntry['type']): number {
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (items[i].type === type) return i
+  }
+  return -1
+}
+
+/**
+ * Share turn must appear below any Quick Recap flashcards (recap reply).
+ * If flashcards already exist, insert the share user bubble after the last flashcard block.
+ * Otherwise append (recap flow will insert flash after recap user → [recap, flash, share]).
+ */
+function insertShareUserBubble(items: WelcomeStreamEntry[], shareBubble: WelcomeStreamEntry): WelcomeStreamEntry[] {
+  const flashIdx = lastIndexOfType(items, 'flashcards')
+  if (flashIdx >= 0) {
+    return [...items.slice(0, flashIdx + 1), shareBubble, ...items.slice(flashIdx + 1)]
+  }
+  return [...items, shareBubble]
+}
+
 function WelcomeBackPage({
   onContinue,
   learningPathOpen,
@@ -1138,38 +1555,130 @@ function WelcomeBackPage({
   onLearningPathOpen: () => void
   onLearningPathClose: () => void
 }) {
-  /** 0 = idle, 1 = user bubble, 2 = + AI typing, 3 = + assessment card */
-  const [skillSharePhase, setSkillSharePhase] = useState(0)
-  /** Timers must not live in an effect keyed by `skillSharePhase`: when phase→2, cleanup would cancel the pending phase→3 timeout. */
-  const [skillShareFlowStarted, setSkillShareFlowStarted] = useState(false)
-  /** Scroll this region so the full session card + chat move up together (no translate clipping). */
+  /** Chronological chat stream (oldest → newest). New entries push previous content up — Cursor-style. */
+  const [welcomeStream, setWelcomeStream] = useState<WelcomeStreamEntry[]>([])
   const welcomeStreamScrollRef = useRef<HTMLDivElement>(null)
+  const pendingTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  const skillShareStartedRef = useRef(false)
+  const recapStartedRef = useRef(false)
 
-  const startSkillShareFlow = () => {
-    if (skillShareFlowStarted) return
-    setSkillShareFlowStarted(true)
-    setSkillSharePhase(1)
+  const schedule = (fn: () => void, ms: number) => {
+    const id = setTimeout(fn, ms)
+    pendingTimeoutsRef.current.push(id)
   }
 
   useEffect(() => {
-    if (!skillShareFlowStarted) return
-    const t1 = setTimeout(() => setSkillSharePhase(2), 500)
-    const t2 = setTimeout(() => setSkillSharePhase(3), 1500)
     return () => {
-      clearTimeout(t1)
-      clearTimeout(t2)
+      pendingTimeoutsRef.current.forEach(clearTimeout)
+      pendingTimeoutsRef.current = []
     }
-  }, [skillShareFlowStarted])
+  }, [])
+
+  const startSkillShareFlow = () => {
+    if (skillShareStartedRef.current) return
+    skillShareStartedRef.current = true
+    const userId = streamEntryId()
+    const typingId = streamEntryId()
+    const assessmentId = streamEntryId()
+    setWelcomeStream((s) =>
+      insertShareUserBubble(s, { id: userId, type: 'user_bubble', text: SKILL_SHARE_PROMPT }),
+    )
+    schedule(() => {
+      setWelcomeStream((s) =>
+        insertWelcomeEntryAfterParent(s, userId, { id: typingId, type: 'typing' }),
+      )
+    }, 450)
+    schedule(() => {
+      setWelcomeStream((s) => {
+        const withoutTyping = s.filter((e) => e.id !== typingId)
+        return insertWelcomeEntryAfterParent(withoutTyping, userId, {
+          id: assessmentId,
+          type: 'skill_assessment',
+        })
+      })
+    }, 1400)
+  }
+
+  const startRecapFlow = () => {
+    if (recapStartedRef.current) return
+    recapStartedRef.current = true
+    const userId = streamEntryId()
+    const flashId = streamEntryId()
+    setWelcomeStream((s) => [...s, { id: userId, type: 'user_bubble', text: RECAP_USER_PROMPT }])
+    schedule(() => {
+      setWelcomeStream((s) =>
+        insertWelcomeEntryAfterParent(s, userId, { id: flashId, type: 'flashcards' }),
+      )
+    }, 500)
+  }
 
   useEffect(() => {
-    if (!skillShareFlowStarted) return
+    if (welcomeStream.length === 0) return
     const el = welcomeStreamScrollRef.current
     if (!el) return
     const id = requestAnimationFrame(() => {
       el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
     })
     return () => cancelAnimationFrame(id)
-  }, [skillSharePhase, skillShareFlowStarted])
+  }, [welcomeStream])
+
+  const hasSkillShareUser = welcomeStream.some((e) => e.type === 'user_bubble' && e.text === SKILL_SHARE_PROMPT)
+  const hasRecapUser = welcomeStream.some((e) => e.type === 'user_bubble' && e.text === RECAP_USER_PROMPT)
+  const hasSkillAssessment = welcomeStream.some((e) => e.type === 'skill_assessment')
+
+  /** Always render Recap (bubble + flashcards) above Share (bubble + typing + trees), regardless of click order. */
+  const recapSectionEntries = useMemo(
+    () =>
+      welcomeStream.filter(
+        (e) =>
+          (e.type === 'user_bubble' && e.text === RECAP_USER_PROMPT) || e.type === 'flashcards',
+      ),
+    [welcomeStream],
+  )
+  const shareSectionEntries = useMemo(
+    () =>
+      welcomeStream.filter(
+        (e) =>
+          (e.type === 'user_bubble' && e.text === SKILL_SHARE_PROMPT) ||
+          e.type === 'typing' ||
+          e.type === 'skill_assessment',
+      ),
+    [welcomeStream],
+  )
+
+  const renderWelcomeStreamEntry = (entry: WelcomeStreamEntry) => {
+    if (entry.type === 'user_bubble') {
+      return (
+        <div key={entry.id} className="flex justify-end animate-hint-in">
+          <div className="max-w-[min(100%,420px)] rounded-full border border-[#ddd6fe]/60 bg-[#ede9fe] px-4 py-2.5 shadow-sm">
+            <p className="text-left text-sm font-medium leading-6 text-[#1a1f2a] sm:text-[15px]">{entry.text}</p>
+          </div>
+        </div>
+      )
+    }
+    if (entry.type === 'typing') {
+      return (
+        <div key={entry.id} className="animate-hint-in">
+          <TypingIndicator />
+        </div>
+      )
+    }
+    if (entry.type === 'skill_assessment') {
+      return (
+        <div key={entry.id} className="w-full animate-hint-in">
+          <SkillAssessmentCard />
+        </div>
+      )
+    }
+    if (entry.type === 'flashcards') {
+      return (
+        <div key={entry.id} className="w-full animate-hint-in">
+          <QuickRecapFlashcards />
+        </div>
+      )
+    }
+    return null
+  }
 
   return (
     <div className="flex min-h-0 flex-1 gap-4 px-4 pb-5">
@@ -1263,22 +1772,10 @@ function WelcomeBackPage({
             </div>
           </div>
 
-          {skillSharePhase >= 1 && (
+          {welcomeStream.length > 0 && (
             <div className="mt-6 flex w-full flex-col gap-4">
-              {/* User message — Figma node 358:14758 */}
-              <div className="flex justify-end animate-hint-in">
-                <div className="max-w-[min(100%,420px)] rounded-full bg-[#ede9fe] px-4 py-2.5 shadow-sm border border-[#ddd6fe]/60">
-                  <p className="text-sm sm:text-[15px] text-[#1a1f2a] leading-6 text-left font-medium">
-                    {SKILL_SHARE_PROMPT}
-                  </p>
-                </div>
-              </div>
-              {skillSharePhase >= 2 && skillSharePhase < 3 && (
-                <div className="animate-hint-in">
-                  <TypingIndicator />
-                </div>
-              )}
-              {skillSharePhase >= 3 && <SkillAssessmentCard />}
+              {recapSectionEntries.map(renderWelcomeStreamEntry)}
+              {shareSectionEntries.map(renderWelcomeStreamEntry)}
             </div>
           )}
             </div>
@@ -1288,7 +1785,7 @@ function WelcomeBackPage({
           <div className="flex w-full shrink-0 justify-center bg-transparent px-4 pb-6 pt-4">
             <div className="mx-auto flex w-full max-w-[820px] flex-col gap-2">
               <div className="flex flex-wrap gap-2">
-                {!skillShareFlowStarted && (
+                {!hasSkillShareUser && (
                   <button
                     type="button"
                     onClick={startSkillShareFlow}
@@ -1300,7 +1797,7 @@ function WelcomeBackPage({
                     <span className="leading-5">Share my skill level for better personalization</span>
                   </button>
                 )}
-                {skillSharePhase >= 3 && (
+                {hasSkillAssessment && (
                   <button
                     type="button"
                     className="inline-flex h-[45px] max-w-full items-center gap-2 rounded-lg border border-border bg-white px-3 py-1.5 text-left text-sm font-medium text-text-dark transition-colors hover:bg-gray-50/80"
@@ -1311,15 +1808,18 @@ function WelcomeBackPage({
                     <span className="leading-5">Take a quiz for better evaluation</span>
                   </button>
                 )}
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-white text-sm text-text-dark hover:bg-gray-50/80 text-left max-w-full"
-                >
-                  <div className="w-[33px] h-[33px] rounded bg-orange-50 flex items-center justify-center shrink-0">
-                    <FileText className="w-4 h-4 text-orange-600" strokeWidth={1.75} />
-                  </div>
-                  <span className="leading-5">Recap what you learned from last session</span>
-                </button>
+                {!hasRecapUser && (
+                  <button
+                    type="button"
+                    onClick={startRecapFlow}
+                    className="inline-flex h-[45px] max-w-full items-center gap-2 rounded-lg border border-border bg-white px-3 py-1.5 text-left text-sm text-text-dark transition-colors hover:bg-gray-50/80"
+                  >
+                    <div className="flex h-[33px] w-[33px] shrink-0 items-center justify-center rounded bg-orange-50">
+                      <FileText className="h-4 w-4 text-orange-600" strokeWidth={1.75} aria-hidden />
+                    </div>
+                    <span className="leading-5">Recap what you learned from last session</span>
+                  </button>
+                )}
               </div>
               <div className="bg-white border border-border rounded-lg p-2 flex items-center gap-2 shadow-sm">
                 <button type="button" className="p-1.5 rounded hover:bg-black/5 shrink-0" aria-label="Add">
@@ -1355,7 +1855,7 @@ function WelcomeBackPage({
 // ─── App Root ───
 
 export default function App() {
-  const [page, setPage] = useState<Page>('challenge')
+  const [page, setPage] = useState<Page>('welcome')
   const [rightPanel, setRightPanel] = useState<RightPanel>('instructions')
   const [learningPathOpen, setLearningPathOpen] = useState(false)
 
@@ -1370,6 +1870,9 @@ export default function App() {
   return (
     <div className="flex h-screen min-h-0 w-full flex-col overflow-x-hidden overflow-y-hidden bg-page-bg font-sans">
       <Header onSparkleClick={page === 'ide' ? toggleCoach : undefined} />
+      {page === 'analyzing' && (
+        <ProactiveAnalysisPage onContinue={() => setPage('challenge')} />
+      )}
       {page === 'challenge' && (
         <ChallengePage onLaunch={() => setPage('ide')} />
       )}
@@ -1381,7 +1884,7 @@ export default function App() {
       )}
       {page === 'welcome' && (
         <WelcomeBackPage
-          onContinue={() => setPage('challenge')}
+          onContinue={() => setPage('analyzing')}
           learningPathOpen={learningPathOpen}
           onLearningPathOpen={() => setLearningPathOpen(true)}
           onLearningPathClose={() => setLearningPathOpen(false)}
