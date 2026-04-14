@@ -1307,55 +1307,55 @@ const SKILL_SHARE_PROMPT =
 const RECAP_USER_PROMPT = 'Recap what I learned from last session'
 
 /** Quick Recap flashcards — Proactive AI MVP (Figma node 8:13594) */
+/** Quick Recap: `front` = question (last session), `back` = answer */
 const recapCards: { front: string; back: string }[] = [
   {
-    front:
-      'I can clean and reformat messy datasets—such as fixing inconsistent date formats, categories, or text labels—to prepare them for analysis.',
-    back: 'Data cleaning reduces bias and errors before visualization or modeling.',
+    front: 'In our last session, why was “working with large data sets” moved to the start of today’s plan?',
+    back: 'Because the path identified it as a skill gap to close first—so you get comfortable there before moving to the next focus.',
   },
   {
-    front: 'A clear prompt should state the goal, audience, and constraints in plain language.',
-    back: 'Context + constraints steer the model toward useful, on-topic outputs.',
+    front: 'What is one thing you can do to clean messy datasets before analysis?',
+    back: 'Reformat inconsistent dates, categories, or text labels so the data is consistent and ready to analyze.',
   },
   {
-    front: 'Few-shot prompting means giving a couple of examples before the actual task.',
-    back: 'Examples teach the format and tone you want without long explanations.',
+    front: 'What was the main skill theme called out for today’s session besides data sets?',
+    back: 'Prompt engineering basics—framing goals and constraints so generative AI outputs stay useful and on-topic.',
   },
   {
-    front: 'HTML provides structure; CSS controls presentation and layout.',
-    back: 'Separation of structure and style makes pages easier to maintain.',
+    front: 'In the HTML lab, what does the <nav> element usually wrap?',
+    back: 'The navigation links (e.g. Home, Projects, Contact) that help users move between sections of the page.',
   },
   {
-    front: 'Semantic tags like <nav> and <main> help accessibility and SEO.',
-    back: 'Screen readers and search engines use structure to understand the page.',
+    front: 'Why might you use display: flex on <nav>?',
+    back: 'To lay links out in a row (or column) with predictable spacing instead of stacking them vertically by default.',
   },
   {
-    front: 'Flexbox is useful for aligning items in a row or column within a container.',
-    back: 'Use justify-content and align-items to distribute space along axes.',
+    front: 'What is the difference between HTML and CSS in the page you built?',
+    back: 'HTML defines structure and content; CSS controls look and layout (colors, spacing, alignment).',
   },
   {
-    front: 'Iteration means revising prompts based on what the model got wrong.',
-    back: 'Treat prompting like debugging: change one variable at a time.',
+    front: 'What does using # as an href placeholder mean in that exercise?',
+    back: 'It keeps the link on the same page as a temporary target while you focus on structure and styling.',
   },
   {
-    front: 'Correlation does not imply causation—two trends can rise together by coincidence.',
-    back: 'Always ask what third factors might explain both variables.',
+    front: 'What is few-shot prompting?',
+    back: 'Giving the model a few short examples before your real request so it copies the format or tone you want.',
   },
   {
-    front: 'A README in a repo should explain setup, usage, and ownership.',
-    back: 'Good docs shorten onboarding for teammates and your future self.',
+    front: 'After a weak model answer, what is a good prompting habit?',
+    back: 'Iterate like debugging—adjust one thing at a time (context, examples, or constraints) and re-run.',
   },
   {
-    front: 'Version control lets you track changes and collaborate without overwriting work.',
-    back: 'Commits should be small and described so history stays understandable.',
+    front: 'Why verify facts from an LLM when the answer sounds confident?',
+    back: 'Models can hallucinate; for decisions that matter, check against trusted sources or your own data.',
   },
   {
-    front: 'Large language models can hallucinate facts; verify critical claims.',
-    back: 'Use authoritative sources when accuracy matters for decisions.',
+    front: 'What does correlation ≠ causation remind you to ask?',
+    back: 'Whether a third factor could explain both trends, so you don’t mistake coincidence for cause.',
   },
   {
-    front: 'Personalized learning paths adapt tasks to your goals and prior performance.',
-    back: 'Regular practice on weak areas builds durable skills faster.',
+    front: 'What was the purpose of the “Jamie” store website lab in the flow?',
+    back: 'To practice building a simple site in a realistic scenario tied to your goal of getting stronger at creating web pages.',
   },
 ]
 
