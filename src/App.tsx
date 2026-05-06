@@ -318,37 +318,162 @@ function ProactiveAnalysisPage({ onContinue }: { onContinue: () => void }) {
   )
 }
 
-const learningPathTasks: {
-  title: string
-  type: string
-  duration: string
-  icon: 'practice-data' | 'video' | 'practice-debug'
-}[] = [
-  { title: 'Working with Large data sets', type: 'Practice', duration: '4min', icon: 'practice-data' },
-  { title: 'Why good prompts matter', type: 'Video', duration: '4min', icon: 'video' },
-  { title: 'Roles, Context & Framing', type: 'Video', duration: '4min', icon: 'video' },
-  { title: 'Few-shot example formatting', type: 'Video', duration: '4min', icon: 'video' },
-  { title: 'Iteration & Debugging Prompts', type: 'Practice', duration: '15min', icon: 'practice-debug' },
+type CourseItem = { title: string; type: string; duration: string; completed: boolean }
+
+const defaultCourseItems: CourseItem[] = [
+  { title: 'Welcome to SQL for data science', type: 'Video', duration: '6min', completed: false },
+  { title: 'Introduction to databases', type: 'Reading', duration: '6min', completed: false },
+  { title: 'Writing your first SELECT query', type: 'Practice', duration: '10min', completed: false },
+  { title: 'Filtering data with WHERE', type: 'Reading', duration: '6min', completed: false },
+  { title: 'Aggregation: COUNT, SUM, AVG', type: 'Video', duration: '8min', completed: false },
+  { title: 'Joining tables', type: 'Practice', duration: '12min', completed: false },
 ]
 
-function LearningPathTaskIcon({ variant }: { variant: (typeof learningPathTasks)[number]['icon'] }) {
-  if (variant === 'practice-data') {
-    return (
-      <div className="w-[50px] h-12 rounded-lg overflow-hidden shrink-0 ring-1 ring-black/[0.06] bg-[#f0f6ff]">
-        <img src="/lp-working-large-datasets.png" alt="" className="w-full h-full object-cover" />
-      </div>
-    )
-  }
-  if (variant === 'video') {
-    return (
-      <div className="w-10 h-10 rounded-full bg-[#eff6ff] flex items-center justify-center shrink-0">
-        <Video className="w-5 h-5 text-primary" strokeWidth={1.75} />
-      </div>
-    )
-  }
+const personalizedCourseItems: CourseItem[] = [
+  { title: 'Practice: WHERE clause deep dive', type: 'Practice', duration: '8min', completed: false },
+  { title: 'Practice: COUNT, SUM, AVG with real data', type: 'Practice', duration: '10min', completed: false },
+  { title: 'Welcome to SQL for data science', type: 'Video', duration: '6min', completed: false },
+  { title: 'Introduction to databases', type: 'Reading', duration: '6min', completed: false },
+  { title: 'Writing your first SELECT query', type: 'Practice', duration: '10min', completed: false },
+  { title: 'Filtering data with WHERE', type: 'Reading', duration: '6min', completed: false },
+  { title: 'Aggregation: COUNT, SUM, AVG', type: 'Video', duration: '8min', completed: false },
+  { title: 'Joining tables', type: 'Practice', duration: '12min', completed: false },
+]
+
+const learningBlocks = [
+  { num: 4, title: 'Advanced queries, JOINs & large dataset analysis', status: 'current' as const, detail: '7 items remaining' },
+  { num: 3, title: 'Filtering, aggregation & grouping data', status: 'done' as const, detail: 'All items completed' },
+]
+
+const upcomingTags = ['Role of SQL and this course in data science', 'Environment set up', 'Environment set up']
+
+type LearningBlock = (typeof learningBlocks)[number]
+
+const blockDetailItems: Record<number, { title: string; type: string; duration: string; state: 'done' | 'active' | 'upcoming' }[]> = {
+  3: [
+    { title: 'Introduction to filtering with WHERE', type: 'Video', duration: '6min', state: 'done' },
+    { title: 'GROUP BY and aggregation basics', type: 'Reading', duration: '6min', state: 'done' },
+    { title: 'COUNT, SUM, AVG, MIN, MAX', type: 'Practice', duration: '8min', state: 'done' },
+    { title: 'Practice: Aggregating sales data', type: 'Reading', duration: '6min', state: 'done' },
+    { title: 'Filtering groups with HAVING', type: 'Reading', duration: '6min', state: 'done' },
+    { title: 'Combining WHERE and HAVING', type: 'Video', duration: '6min', state: 'done' },
+    { title: 'Advanced aggregation patterns', type: 'Reading', duration: '6min', state: 'done' },
+    { title: 'Practice: Complex aggregations', type: 'Practice', duration: '10min', state: 'done' },
+  ],
+  1: [
+    { title: 'Setting up your SQL environment', type: 'Video', duration: '6min', state: 'done' },
+    { title: 'What is a relational database?', type: 'Reading', duration: '6min', state: 'done' },
+    { title: 'Tables, rows, and columns explained', type: 'Video', duration: '6min', state: 'done' },
+    { title: 'Practice: Exploring a sample database', type: 'Practice', duration: '8min', state: 'done' },
+    { title: 'Primary keys and data types', type: 'Reading', duration: '6min', state: 'done' },
+  ],
+}
+
+function CourseProgressModal({ onClose, onSelectBlock }: { onClose: () => void; onSelectBlock: (block: LearningBlock) => void }) {
   return (
-    <div className="w-[50px] h-12 rounded-lg overflow-hidden shrink-0 ring-1 ring-black/[0.06] bg-[#fff5eb]">
-      <img src="/lp-iteration-debugging.png" alt="" className="w-full h-full object-cover" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40" />
+      <div
+        className="relative z-10 w-full max-w-[620px] max-h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-black/5 transition-colors z-10"
+          aria-label="Close"
+        >
+          <X className="w-5 h-5 text-text-muted" strokeWidth={2} />
+        </button>
+
+        {/* Scrollable content */}
+        <div className="overflow-y-auto px-6 pt-6 pb-6 flex flex-col gap-5">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-3 pr-8">
+            <div className="flex flex-col gap-1.5">
+              <p className="text-base font-semibold text-[#1f1f1f] leading-5 tracking-[-0.048px]">Course progress</p>
+              <p className="text-sm text-[#1f1f1f] leading-5">This is how much of the course you have completed.</p>
+            </div>
+            <button type="button" className="shrink-0 mt-0.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-text-dark hover:bg-gray-50 transition-colors whitespace-nowrap">
+              Switch to non-personalized course
+            </button>
+          </div>
+
+          {/* Progress card */}
+          <div className="rounded-2xl border border-[#dae1ed] bg-white px-4 py-4 flex flex-col gap-3">
+            <p className="text-sm text-[#5b6780] leading-5">Course completion - 1/10 blocks completed</p>
+            <div className="relative w-full h-1 rounded-full bg-[#e3eeff]">
+              <div className="absolute left-0 top-0 h-1 rounded-full bg-[#0048b0]" style={{ width: '16.67%' }} />
+            </div>
+          </div>
+
+          {/* Your learning blocks */}
+          <div className="flex flex-col gap-2">
+            <p className="text-base font-semibold text-[#1f1f1f] leading-5 tracking-[-0.048px]">Your learning blocks</p>
+            <p className="text-sm text-[#1f1f1f] leading-5">New learning blocks will appear here as the course adapts to you as you go through the course.</p>
+          </div>
+
+          {/* Block cards */}
+          <div className="flex flex-col gap-3">
+            {learningBlocks.map((block) => (
+              <div
+                key={block.num}
+                onClick={() => { if (block.status === 'done') { onSelectBlock(block); onClose(); } }}
+                className={`flex gap-4 items-start p-5 rounded-2xl border transition-colors ${
+                  block.status === 'current'
+                    ? 'border-[#0056d2] bg-[#f0f6ff]/60'
+                    : block.status === 'done'
+                    ? 'border-[#dae1ed] bg-white cursor-pointer hover:bg-[#f8fafc]'
+                    : 'border-[#dae1ed] bg-white'
+                }`}
+              >
+                {/* Content */}
+                <div className="flex-1 min-w-0 flex flex-col gap-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-base font-semibold text-[#5b6780] leading-5 tracking-[-0.048px]">{block.title}</p>
+                    {block.status === 'current' && (
+                      <span className="shrink-0 rounded-full bg-[#1f1f1f] text-white text-xs font-semibold px-3 py-1 leading-4 whitespace-nowrap">
+                        Today's learning
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {block.status === 'done' ? (
+                      <CircleCheck className="w-4 h-4 text-[#22c55e] shrink-0" strokeWidth={2} />
+                    ) : (
+                      <svg className="w-4 h-4 shrink-0 text-[#0056d2]" viewBox="0 0 16 16" fill="currentColor">
+                        <path fillRule="evenodd" clipRule="evenodd" d="M8 1.5a6.5 6.5 0 1 0 0 13A6.5 6.5 0 0 0 8 1.5ZM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8.75-3.25a.75.75 0 0 0-1.5 0V8c0 .199.079.39.22.53l2.25 2.25a.75.75 0 1 0 1.06-1.06L8.75 7.69V4.75ZM7.25 4.75a.75.75 0 0 1 1.5 0v2.94l1.53 1.53a.75.75 0 1 1-1.06 1.06l-2.25-2.25A.75.75 0 0 1 7.25 8V4.75Z" />
+                      </svg>
+                    )}
+                    <p className="text-xs text-[#5b6780] leading-[18px]">{block.detail}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Upcoming Content */}
+          <div className="flex flex-col gap-3 pt-2">
+            <p className="text-base font-semibold text-[#1f1f1f] leading-5 tracking-[-0.048px]">Upcoming Content</p>
+            <div className="flex flex-col gap-2">
+              <p className="text-xl font-semibold text-[#5b6780] leading-6 tracking-[-0.06px]">Approximately 8 blocks to go (60 min each)</p>
+              <p className="text-sm text-[#1f1f1f] leading-5">This is an estimate of how much you have to go based the remaining material and your session time.</p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <p className="text-xs text-[#5b6780] leading-[18px]">Concepts covered</p>
+              <div className="flex flex-wrap gap-2">
+                {upcomingTags.map((tag, i) => (
+                  <span key={i} className="rounded-full border border-[#dae1ed] px-3 py-1 text-xs text-[#5b6780] leading-[18px]">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   )
 }
@@ -357,12 +482,27 @@ function LearningPathSidebarColumn({
   open,
   onOpen,
   onClose,
+  selectedBlock,
+  setSelectedBlock,
+  courseItems,
 }: {
   open: boolean
   onOpen: () => void
   onClose: () => void
+  selectedBlock: LearningBlock | null
+  setSelectedBlock: (block: LearningBlock | null) => void
+  courseItems: CourseItem[]
 }) {
+  const [courseProgressOpen, setCourseProgressOpen] = useState(false)
+
   return (
+    <>
+    {courseProgressOpen && (
+      <CourseProgressModal
+        onClose={() => setCourseProgressOpen(false)}
+        onSelectBlock={(block) => { setSelectedBlock(block); setCourseProgressOpen(false); }}
+      />
+    )}
     <div
       className={`shrink-0 h-full min-h-0 flex flex-col bg-white rounded-2xl overflow-hidden transition-[width] duration-300 ease-in-out ${
         open ? 'w-[360px]' : 'w-[52px]'
@@ -382,91 +522,142 @@ function LearningPathSidebarColumn({
         </div>
       ) : (
         <div className="flex flex-col h-full min-h-0 w-[360px]">
-          <div className="shrink-0 px-6 pt-6 pb-7 border-b border-border/60">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <h2 className="text-xl font-semibold text-text-dark leading-6 tracking-[-0.06px]">
-                  Generative AI Content Creation
-                </h2>
-                <button
-                  type="button"
-                  className="mt-1 text-sm font-semibold text-primary hover:underline text-left block"
-                >
-                  My personalized learning path
-                </button>
-              </div>
+          {/* Header */}
+          <div className="shrink-0 px-4 pt-6 pb-3 flex items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-[20px] font-semibold text-text-dark leading-6 tracking-[-0.06px]">
+                SQL for Data Science (and Version Control with GitHub)
+              </h2>
               <button
                 type="button"
-                onClick={onClose}
-                className="p-1 rounded-lg hover:bg-black/5 shrink-0"
-                aria-label="Close learning path"
+                onClick={() => setCourseProgressOpen(true)}
+                className="mt-1 text-sm font-semibold text-primary hover:underline text-left block"
               >
-                <PanelLeft className="w-5 h-5 text-text-muted" />
+                Course progress
               </button>
             </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 rounded-lg hover:bg-black/5 shrink-0 mt-0.5"
+              aria-label="Close panel"
+            >
+              <PanelLeft className="w-5 h-5 text-text-muted" />
+            </button>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 pt-4 pb-6 flex flex-col">
-            <div className="shrink-0 rounded-xl p-4 relative overflow-hidden bg-slate-50">
-              <div
-                className="absolute inset-0 opacity-80 pointer-events-none rounded-xl"
-                style={{
-                  background: 'linear-gradient(20.78deg, rgb(255, 255, 255) 34%, rgb(242, 245, 250) 82%)',
-                }}
-              />
-              <div className="relative flex gap-4 items-start">
-                <div className="flex-1 min-w-0 flex flex-col gap-2">
-                  <p className="text-sm font-semibold text-text-dark leading-[18px] tracking-[-0.042px]">
-                    Today&apos;s <span className="underline decoration-solid">60min</span> session
-                  </p>
-                  <p className="text-xs text-text-dark leading-[18px]">
-                    Understand HTML advanced concepts and be able to build a HTML webpage.
-                  </p>
-                </div>
-                <div className="w-11 h-11 rounded-full bg-amber-100 flex items-center justify-center shrink-0 ring-1 ring-amber-200/40">
-                  <Trophy className="w-5 h-5 text-amber-700" strokeWidth={1.75} />
-                </div>
-              </div>
-            </div>
+          <div className="w-full h-px bg-border/60 shrink-0" />
 
-            <div className="mt-5 flex flex-col gap-3">
-              {learningPathTasks.map((task) => (
-                <button
-                  key={task.title}
-                  type="button"
-                  className={`w-full text-left rounded-xl py-3 pl-2 pr-3 flex gap-3 items-center transition-colors hover:bg-[#f0f6ff]/80 ${
-                    task.icon === 'video' ? 'pl-1.5' : ''
-                  }`}
-                >
-                  <LearningPathTaskIcon variant={task.icon} />
-                  <div className="min-w-0 flex-1 flex flex-col gap-1">
-                    <p className="text-base font-semibold text-text-dark leading-5 tracking-[-0.048px]">{task.title}</p>
-                    <p className="text-sm text-[#636363] leading-5">
-                      {task.type}
-                      <span className="text-text-muted mx-2">•</span>
-                      {task.duration}
+          {selectedBlock ? (
+            /* ── Block detail view ── */
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 pt-4 pb-6 flex flex-col gap-3">
+              {/* Go back button */}
+              <button
+                type="button"
+                onClick={() => setSelectedBlock(null)}
+                className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white font-semibold text-sm py-3 rounded-xl transition-colors"
+              >
+                Go back to today&apos;s learning
+                <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+              </button>
+
+              {/* Previous learning card */}
+              <div className="shrink-0 rounded-xl p-4 bg-[#f2f5fa] flex items-center gap-3">
+                <div className="flex-1 min-w-0 flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5">
+                    <Trophy className="w-3.5 h-3.5 text-text-muted shrink-0" strokeWidth={1.75} />
+                    <p className="text-xs font-semibold text-text-muted leading-[18px]">
+                      Previous learning
                     </p>
                   </div>
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-8 pt-4 border-t border-border shrink-0">
-              <p className="text-xs text-text-muted leading-[18px] mb-3">Future Learning</p>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-[#22c55e] shrink-0" strokeWidth={2} />
-                  <span className="text-sm font-semibold text-text-muted tracking-[-0.042px] uppercase">Next goal</span>
+                  <p className="text-sm text-text-dark leading-[18px]">{selectedBlock.title}</p>
                 </div>
-                <p className="text-xs text-text-dark leading-[18px] pl-0">
-                  Understand GitHub advanced concepts and be able to utilize the platform.
-                </p>
+                <div className="shrink-0 w-10 h-10 flex items-center justify-center">
+                  <TreePine className="w-8 h-8 text-[#4ade80]" strokeWidth={1.25} />
+                </div>
+              </div>
+
+              {/* Block course items */}
+              <div className="flex flex-col">
+                {(blockDetailItems[selectedBlock.num] ?? []).map((item, i) => (
+                  <div
+                    key={i}
+                    className={`w-full py-3 flex gap-3 items-center rounded-md transition-colors hover:bg-black/[0.03] ${
+                      item.state === 'active' ? 'border-l-[3px] border-primary pl-1.5' : 'px-2'
+                    }`}
+                  >
+                    {item.state === 'done' ? (
+                      <div className="w-5 h-5 rounded-[6px] bg-[#095941] flex items-center justify-center shrink-0">
+                        <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                      </div>
+                    ) : (
+                      <div className="w-5 h-5 rounded-full border-2 border-[#d1d5db] shrink-0" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-text-dark leading-[18px]">{item.title}</p>
+                      <p className="text-sm text-[#636363] leading-5">
+                        {item.type}
+                        <span className="text-text-muted mx-1.5">•</span>
+                        {item.duration}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
+          ) : (
+            /* ── Default sidebar view ── */
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 pt-4 pb-6 flex flex-col gap-2">
+              {/* Today's plan card */}
+              <div className="shrink-0 rounded-xl p-4 relative overflow-hidden bg-[#f2f5fa] flex items-center gap-3">
+                <div className="flex-1 min-w-0 flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5 text-text-muted shrink-0" strokeWidth={1.75} />
+                    <p className="text-xs font-semibold text-text-muted leading-[18px] tracking-[-0.02em]">
+                      Today&apos;s plan&nbsp;•&nbsp;60 min
+                    </p>
+                  </div>
+                  <p className="text-sm text-text-dark leading-[18px]">
+                    Diving deeper into databases and Jupyter Notebooks
+                  </p>
+                </div>
+                <div className="shrink-0 w-10 h-10 flex items-center justify-center">
+                  <TreePine className="w-8 h-8 text-[#4ade80]" strokeWidth={1.25} />
+                </div>
+              </div>
+
+              {/* Course items */}
+              <div className="flex flex-col">
+                {courseItems.map((item, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="w-full text-left py-3 px-2 flex gap-3 items-center rounded-md transition-colors hover:bg-black/[0.03]"
+                  >
+                    {item.completed ? (
+                      <div className="w-5 h-5 rounded-[6px] bg-[#095941] flex items-center justify-center shrink-0">
+                        <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                      </div>
+                    ) : (
+                      <div className="w-5 h-5 rounded-full border-2 border-[#d1d5db] shrink-0" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-text-dark leading-[18px]">{item.title}</p>
+                      <p className="text-sm text-[#636363] leading-5">
+                        {item.type}
+                        <span className="text-text-muted mx-1.5">•</span>
+                        {item.duration}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
+    </>
   )
 }
 
@@ -1301,61 +1492,46 @@ function WelcomeChipSparkle({ className }: { className?: string }) {
   )
 }
 
-const SKILL_SHARE_PROMPT =
-  'Share my skill level for better personalization'
+const SKILL_SHARE_PROMPT = 'Take a self assessment for better personalization'
 
 const RECAP_USER_PROMPT = 'Recap what I learned from last session'
 
-/** Quick Recap flashcards — Proactive AI MVP (Figma node 8:13594) */
-/** Quick Recap: `front` = question (last session), `back` = answer */
 const recapCards: { front: string; back: string }[] = [
   {
-    front: 'In our last session, why was “working with large data sets” moved to the start of today’s plan?',
-    back: 'Because the path identified it as a skill gap to close first—so you get comfortable there before moving to the next focus.',
+    front: "I can clean and reformat messy datasets to prepare them for analysis.",
+    back: "Use pandas: df['date'] = pd.to_datetime(df['date']) and df['category'].str.strip().str.lower() to normalize values before analysis.",
   },
   {
-    front: 'What is one thing you can do to clean messy datasets before analysis?',
-    back: 'Reformat inconsistent dates, categories, or text labels so the data is consistent and ready to analyze.',
+    front: "I know how to write a SQL SELECT query to retrieve specific columns from a table.",
+    back: "SELECT column1, column2 FROM table_name; -- specify only the columns you need rather than using SELECT *.",
   },
   {
-    front: 'What was the main skill theme called out for today’s session besides data sets?',
-    back: 'Prompt engineering basics—framing goals and constraints so generative AI outputs stay useful and on-topic.',
+    front: "I understand how to use WHERE to filter rows based on a condition.",
+    back: "SELECT * FROM orders WHERE status = 'shipped' AND amount > 100; -- WHERE evaluates each row against the condition.",
   },
   {
-    front: 'In the HTML lab, what does the <nav> element usually wrap?',
-    back: 'The navigation links (e.g. Home, Projects, Contact) that help users move between sections of the page.',
+    front: "I can use GROUP BY with aggregate functions like COUNT and AVG.",
+    back: "SELECT department, COUNT(*) AS headcount, AVG(salary) AS avg_sal FROM employees GROUP BY department;",
   },
   {
-    front: 'Why might you use display: flex on <nav>?',
-    back: 'To lay links out in a row (or column) with predictable spacing instead of stacking them vertically by default.',
+    front: "I understand the difference between INNER JOIN and LEFT JOIN.",
+    back: "INNER JOIN returns only matching rows from both tables. LEFT JOIN returns all rows from the left table, with NULLs where there is no match on the right.",
   },
   {
-    front: 'What is the difference between HTML and CSS in the page you built?',
-    back: 'HTML defines structure and content; CSS controls look and layout (colors, spacing, alignment).',
+    front: "I can identify and handle NULL values in SQL queries.",
+    back: "Use IS NULL / IS NOT NULL in WHERE, and COALESCE(column, default_value) to substitute a fallback when a value is missing.",
   },
   {
-    front: 'What does using # as an href placeholder mean in that exercise?',
-    back: 'It keeps the link on the same page as a temporary target while you focus on structure and styling.',
+    front: "I know when to use HAVING instead of WHERE.",
+    back: "WHERE filters rows before grouping; HAVING filters groups after GROUP BY. e.g. HAVING COUNT(*) > 5 keeps only groups with more than 5 rows.",
   },
   {
-    front: 'What is few-shot prompting?',
-    back: 'Giving the model a few short examples before your real request so it copies the format or tone you want.',
+    front: "I can explain what a primary key and a foreign key are.",
+    back: "A primary key uniquely identifies each row in a table. A foreign key in one table references the primary key of another, creating a relationship between them.",
   },
   {
-    front: 'After a weak model answer, what is a good prompting habit?',
-    back: 'Iterate like debugging—adjust one thing at a time (context, examples, or constraints) and re-run.',
-  },
-  {
-    front: 'Why verify facts from an LLM when the answer sounds confident?',
-    back: 'Models can hallucinate; for decisions that matter, check against trusted sources or your own data.',
-  },
-  {
-    front: 'What does correlation ≠ causation remind you to ask?',
-    back: 'Whether a third factor could explain both trends, so you don’t mistake coincidence for cause.',
-  },
-  {
-    front: 'What was the purpose of the “Jamie” store website lab in the flow?',
-    back: 'To practice building a simple site in a realistic scenario tied to your goal of getting stronger at creating web pages.',
+    front: "I can sort query results and limit the number of rows returned.",
+    back: "SELECT * FROM products ORDER BY price DESC LIMIT 10; -- ORDER BY sorts ascending by default (DESC for reverse), LIMIT caps the number of rows returned.",
   },
 ]
 
@@ -1448,53 +1624,49 @@ function QuickRecapFlashcards() {
   )
 }
 
-/** Figma Proactive-AI-Learning-Vision — skill assessment card (node 358:15570) */
-function SkillAssessmentCard() {
-  const levels = [
-    {
-      Icon: Sprout,
-      iconBox: 'h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]',
-      iconClass: 'w-9 h-9 sm:w-10 sm:h-10',
-      title: 'New to this',
-      desc: "I haven't done this before",
-    },
-    {
-      Icon: TreeDeciduous,
-      iconBox: 'h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]',
-      iconClass: 'w-10 h-10 sm:w-11 sm:h-11',
-      title: "I've seen this",
-      desc: 'Need a refresher',
-    },
-    {
-      Icon: TreePine,
-      iconBox: 'h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]',
-      iconClass: 'w-11 h-11 sm:w-12 sm:h-12',
-      title: 'I know this well',
-      desc: 'I can do this independently',
-    },
-  ] as const
+const assessmentOptionsQ1 = [
+  { label: 'New to this.', desc: "I'm still figuring out the basic syntax." },
+  { label: "I've seen this.", desc: "I can handle SELECT and WHERE, but a quick refresh wouldn't hurt." },
+  { label: 'I know this well.', desc: "I'm a pro at basics. Skip the intro and let's get to work." },
+]
 
+const assessmentOptionsQ2 = [
+  { label: 'Not yet.', desc: "I haven't tried grouping data on my own." },
+  { label: 'Getting there.', desc: "I understand GROUP BY but still mix up HAVING and WHERE." },
+  { label: 'Solid on this.', desc: "I can group data and filter aggregates confidently." },
+]
+
+function SkillAssessmentCard({
+  options,
+  onAnswer,
+  onSkip,
+}: {
+  options: { label: string; desc: string }[]
+  onAnswer: (text: string) => void
+  onSkip: () => void
+}) {
   return (
-    <div className="w-full max-w-full animate-hint-in rounded-2xl border border-[#e4e9f0] bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] sm:p-6">
-      <h3 className="text-xl font-semibold text-[#1a1f2a] tracking-[-0.02em] leading-7">Query Relational Data</h3>
-      <p className="mt-2 text-base text-[#5B6780] leading-6">
-        Can you Write a SELECT statement and filter results with WHERE?
-      </p>
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
-        {levels.map(({ Icon, iconBox, iconClass, title, desc }) => (
+    <div className="w-full animate-hint-in rounded-2xl border border-[#dae1ed] bg-white shadow-[0px_4px_7px_1px_rgba(0,0,0,0.10)] overflow-hidden">
+      <div className="px-4 pt-5 pb-2">
+        <button type="button" onClick={onSkip} className="text-sm font-semibold text-primary hover:underline">
+          Skip For Now
+        </button>
+      </div>
+      <div className="flex flex-col px-2 pb-4">
+        {options.map((opt, i) => (
           <button
-            key={title}
+            key={i}
             type="button"
-            className="flex min-h-0 flex-col items-center rounded-xl border border-[#dae1ed] bg-white px-4 py-6 text-center transition-colors hover:border-[#c5cedd] hover:bg-[#f8fafc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-5"
+            onClick={() => onAnswer(`${opt.label} ${opt.desc}`)}
+            className="flex items-center gap-3 px-2 py-3 border-b border-[#dae1ed] last:border-b-0 text-left hover:bg-[#f2f5fa] transition-colors rounded-sm"
           >
-            <span
-              className={`mb-4 flex shrink-0 ${iconBox} items-center justify-center rounded-xl bg-[#ecfdf3] text-[#15803d]`}
-              aria-hidden
-            >
-              <Icon className={iconClass} strokeWidth={1.5} />
-            </span>
-            <p className="text-sm font-semibold text-[#1a1f2a] leading-5">{title}</p>
-            <p className="mt-2 text-xs text-text-muted leading-4 sm:text-sm">{desc}</p>
+            <div className="w-[25px] h-[25px] shrink-0 rounded-[4px] bg-[#f2f5fa] flex items-center justify-center">
+              <span className="text-xs font-semibold text-text-dark">{i + 1}</span>
+            </div>
+            <p className="text-base text-text-dark leading-6">
+              <span className="font-bold">{opt.label}</span>{' '}
+              <span className="font-normal">{opt.desc}</span>
+            </p>
           </button>
         ))}
       </div>
@@ -1502,10 +1674,47 @@ function SkillAssessmentCard() {
   )
 }
 
+function PersonalizedPlanCard() {
+  return (
+    <div className="w-full overflow-hidden rounded-2xl border border-border bg-white shadow-sm animate-hint-in">
+      <div className="flex flex-col gap-1 bg-[#f2f5fa] px-6 py-6 sm:px-8">
+        <span className="self-start rounded-full bg-white/80 border border-border px-3 py-1 text-sm font-medium text-text-dark leading-5">Updated plan</span>
+        <h2 className="mt-2 text-xl font-semibold text-black leading-7 tracking-[-0.15px]">
+          Your personalized learning plan
+        </h2>
+      </div>
+      <div className="flex flex-col gap-6 border-t border-border bg-white px-6 py-6 sm:px-8">
+        <div className="flex gap-2 items-start">
+          <Target className="w-5 h-5 text-text-muted shrink-0 mt-0.5" strokeWidth={1.5} />
+          <div className="flex flex-col gap-1 min-w-0">
+            <p className="text-xs text-text-muted leading-4">Skill gap you will close</p>
+            <p className="text-sm text-text-dark leading-5">
+              Based on your self-assessment, I added two targeted practice items at the start of today&apos;s block to strengthen your filtering and aggregation fundamentals before the JOIN content.
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2 items-start">
+          <Award className="w-5 h-5 text-text-muted shrink-0 mt-0.5" strokeWidth={1.75} />
+          <div className="flex flex-col gap-2 min-w-0">
+            <p className="text-xs text-text-muted leading-4">Skills you will learn and work on</p>
+            <p className="text-[16px] font-semibold leading-6 text-text-dark">SQL filtering & aggregation fundamentals</p>
+            <p className="text-sm font-normal text-text-dark leading-5">
+              We&apos;ll reinforce WHERE clauses and aggregate functions (COUNT, SUM, AVG) with hands-on practice, then move into advanced JOINs and large dataset analysis.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 type WelcomeStreamEntry =
   | { id: string; type: 'user_bubble'; text: string }
+  | { id: string; type: 'assessment_user_bubble'; text: string }
   | { id: string; type: 'typing' }
+  | { id: string; type: 'ai_bubble'; text: string }
   | { id: string; type: 'skill_assessment' }
+  | { id: string; type: 'personalized_plan' }
   | { id: string; type: 'flashcards' }
 
 function streamEntryId() {
@@ -1555,12 +1764,16 @@ function WelcomeBackPage({
   onLearningPathOpen: () => void
   onLearningPathClose: () => void
 }) {
+  const [selectedBlock, setSelectedBlock] = useState<LearningBlock | null>(null)
+  const [courseItems, setCourseItems] = useState<CourseItem[]>(defaultCourseItems)
+
   /** Chronological chat stream (oldest → newest). New entries push previous content up — Cursor-style. */
   const [welcomeStream, setWelcomeStream] = useState<WelcomeStreamEntry[]>([])
   const welcomeStreamScrollRef = useRef<HTMLDivElement>(null)
   const pendingTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const skillShareStartedRef = useRef(false)
   const recapStartedRef = useRef(false)
+  const [assessmentPhase, setAssessmentPhase] = useState<'q1' | 'q2' | 'done'>('q1')
 
   const schedule = (fn: () => void, ms: number) => {
     const id = setTimeout(fn, ms)
@@ -1579,6 +1792,7 @@ function WelcomeBackPage({
     skillShareStartedRef.current = true
     const userId = streamEntryId()
     const typingId = streamEntryId()
+    const aiBubbleId = streamEntryId()
     const assessmentId = streamEntryId()
     setWelcomeStream((s) =>
       insertShareUserBubble(s, { id: userId, type: 'user_bubble', text: SKILL_SHARE_PROMPT }),
@@ -1587,16 +1801,22 @@ function WelcomeBackPage({
       setWelcomeStream((s) =>
         insertWelcomeEntryAfterParent(s, userId, { id: typingId, type: 'typing' }),
       )
-    }, 450)
+    }, 400)
     schedule(() => {
       setWelcomeStream((s) => {
         const withoutTyping = s.filter((e) => e.id !== typingId)
         return insertWelcomeEntryAfterParent(withoutTyping, userId, {
-          id: assessmentId,
-          type: 'skill_assessment',
+          id: aiBubbleId,
+          type: 'ai_bubble',
+          text: "We want to understand your comfort level with SQL basics.\n\nQuerying & Filtering Foundations: **Can you write a SELECT statement and filter results with WHERE?**",
         })
       })
-    }, 1400)
+    }, 1300)
+    schedule(() => {
+      setWelcomeStream((s) =>
+        insertWelcomeEntryAfterParent(s, aiBubbleId, { id: assessmentId, type: 'skill_assessment' }),
+      )
+    }, 1600)
   }
 
   const startRecapFlow = () => {
@@ -1610,6 +1830,49 @@ function WelcomeBackPage({
         insertWelcomeEntryAfterParent(s, userId, { id: flashId, type: 'flashcards' }),
       )
     }, 500)
+  }
+
+  const handleQ1Answer = (text: string) => {
+    setAssessmentPhase('q2')
+    const answerId = streamEntryId()
+    const typingId = streamEntryId()
+    const aiBubbleId = streamEntryId()
+    setWelcomeStream((s) => [...s, { id: answerId, type: 'assessment_user_bubble', text }])
+    schedule(() => {
+      setWelcomeStream((s) => [...s, { id: typingId, type: 'typing' }])
+    }, 400)
+    schedule(() => {
+      setWelcomeStream((s) => {
+        const withoutTyping = s.filter((e) => e.id !== typingId)
+        return [...withoutTyping, {
+          id: aiBubbleId,
+          type: 'ai_bubble',
+          text: "Got it! One more area to check.\n\nData Grouping & Aggregation: **Can you write a GROUP BY query and use aggregate functions like COUNT or SUM to summarize results?**",
+        }]
+      })
+    }, 1300)
+  }
+
+  const handleQ2Answer = (text: string) => {
+    setAssessmentPhase('done')
+    const answerId = streamEntryId()
+    const typingId = streamEntryId()
+    const planId = streamEntryId()
+    setWelcomeStream((s) => [...s, { id: answerId, type: 'assessment_user_bubble', text }])
+    schedule(() => {
+      setWelcomeStream((s) => [...s, { id: typingId, type: 'typing' }])
+    }, 400)
+    schedule(() => {
+      setCourseItems(personalizedCourseItems)
+      setWelcomeStream((s) => {
+        const withoutTyping = s.filter((e) => e.id !== typingId)
+        return [...withoutTyping, { id: planId, type: 'personalized_plan' }]
+      })
+    }, 2400)
+  }
+
+  const handleAssessmentSkip = () => {
+    setAssessmentPhase('done')
   }
 
   useEffect(() => {
@@ -1640,17 +1903,20 @@ function WelcomeBackPage({
       welcomeStream.filter(
         (e) =>
           (e.type === 'user_bubble' && e.text === SKILL_SHARE_PROMPT) ||
+          e.type === 'assessment_user_bubble' ||
           e.type === 'typing' ||
-          e.type === 'skill_assessment',
+          e.type === 'ai_bubble' ||
+          e.type === 'skill_assessment' ||
+          e.type === 'personalized_plan',
       ),
     [welcomeStream],
   )
 
   const renderWelcomeStreamEntry = (entry: WelcomeStreamEntry) => {
-    if (entry.type === 'user_bubble') {
+    if (entry.type === 'user_bubble' || entry.type === 'assessment_user_bubble') {
       return (
         <div key={entry.id} className="flex justify-end animate-hint-in">
-          <div className="max-w-[min(100%,420px)] rounded-full border border-[#ddd6fe]/60 bg-[#ede9fe] px-4 py-2.5 shadow-sm">
+          <div className="max-w-[min(100%,420px)] rounded-2xl border border-[#ddd6fe]/60 bg-[#ede9fe] px-4 py-2.5 shadow-sm">
             <p className="text-left text-sm font-medium leading-6 text-[#1a1f2a] sm:text-[15px]">{entry.text}</p>
           </div>
         </div>
@@ -1663,10 +1929,29 @@ function WelcomeBackPage({
         </div>
       )
     }
+    if (entry.type === 'ai_bubble') {
+      return (
+        <div key={entry.id} className="animate-hint-in">
+          {entry.text.split('\n\n').map((para, i) => {
+            const parts = para.split(/\*\*(.+?)\*\*/)
+            return (
+              <p key={i} className={`text-base text-text-dark leading-6 ${i > 0 ? 'mt-2' : ''}`}>
+                {parts.map((part, j) =>
+                  j % 2 === 1 ? <strong key={j}>{part}</strong> : part
+                )}
+              </p>
+            )
+          })}
+        </div>
+      )
+    }
     if (entry.type === 'skill_assessment') {
+      return null
+    }
+    if (entry.type === 'personalized_plan') {
       return (
         <div key={entry.id} className="w-full animate-hint-in">
-          <SkillAssessmentCard />
+          <PersonalizedPlanCard />
         </div>
       )
     }
@@ -1686,6 +1971,9 @@ function WelcomeBackPage({
         open={learningPathOpen}
         onOpen={onLearningPathOpen}
         onClose={onLearningPathClose}
+        selectedBlock={selectedBlock}
+        setSelectedBlock={setSelectedBlock}
+        courseItems={courseItems}
       />
       <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-bl from-[#dfe9ff] via-[#f1f4fa] to-[#fff6e8] shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
         <div
@@ -1707,17 +1995,19 @@ function WelcomeBackPage({
             {/* Hero — entire card scrolls as one unit; do not use translate-y (clips against overflow). */}
             <div className="flex flex-col gap-6 bg-[#f2f5fa] px-6 py-8 sm:px-8 md:flex-row md:items-center md:justify-between">
               <div className="flex flex-col gap-1 max-w-[398px] min-w-0">
-                <p className="text-base text-text-muted leading-6">Todays personalized session</p>
-                <h1 className="text-[30px] font-semibold text-black leading-9 tracking-[-0.15px]">
-                  Welcome back Sara!
+                <span className="self-start rounded-full bg-white/80 border border-border px-3 py-1 text-sm font-medium text-text-dark leading-5">{selectedBlock ? 'Completed' : '60 min'}</span>
+                <h1 className="mt-1 text-[30px] font-semibold text-black leading-9 tracking-[-0.15px]">
+                  {selectedBlock ? selectedBlock.title : "Welcome June, here's what you'll learn today"}
                 </h1>
-                <button
-                  type="button"
-                  onClick={onContinue}
-                  className="mt-3 self-start bg-primary hover:bg-primary-hover text-white font-semibold text-base tracking-[1px] px-6 py-2.5 rounded-lg transition-colors"
-                >
-                  Start
-                </button>
+                {!selectedBlock && (
+                  <button
+                    type="button"
+                    onClick={onContinue}
+                    className="mt-3 self-start bg-primary hover:bg-primary-hover text-white font-semibold text-base tracking-[1px] px-6 py-2.5 rounded-lg transition-colors"
+                  >
+                    Start
+                  </button>
+                )}
               </div>
               <div className="hidden md:flex w-[280px] h-[168px] shrink-0 items-center justify-center">
                 <img src="/welcome-hero.png" alt="" className="max-h-full max-w-full object-contain" />
@@ -1725,54 +2015,40 @@ function WelcomeBackPage({
             </div>
 
             {/* Body */}
-            <div className="flex flex-col gap-8 border-t border-border bg-white px-6 py-8 sm:px-10 lg:flex-row">
+            <div className="flex flex-col gap-8 border-t border-border bg-white px-6 py-8 sm:px-10">
               <div className="flex-1 min-w-0 flex flex-col gap-6">
-                <div className="flex gap-2 items-start">
-                  <Target className="w-5 h-5 text-text-muted shrink-0 mt-0.5" strokeWidth={1.5} />
-                  <div className="flex flex-col gap-2 min-w-0">
-                    <p className="text-xs text-text-muted leading-4">Skill gap you will close</p>
-                    <p className="text-sm text-text-dark leading-5">
-                      Based on our last session, I&apos;ve added the practice on working with large data sets to the start of todays session. Once you&apos;re comfortable there, we&apos;ll kick off our work on the next skill.
-                    </p>
+                <div className="flex flex-col gap-3 min-w-0 opacity-90">
+                  <div className="flex items-center gap-2">
+                    {selectedBlock ? <TrendingUp className="w-5 h-5 text-text-muted shrink-0" strokeWidth={1.75} aria-hidden /> : <Award className="w-5 h-5 text-text-muted shrink-0" strokeWidth={1.75} aria-hidden />}
+                    <p className="text-xs text-text-muted leading-4">{selectedBlock ? 'Skills you practiced' : 'Topics you will learn'}</p>
                   </div>
-                </div>
-
-                <div className="flex gap-2 items-start">
-                  <Award className="w-5 h-5 text-text-muted shrink-0 mt-0.5" strokeWidth={1.75} aria-hidden />
-                  <div className="flex flex-col gap-2 min-w-0 opacity-90">
-                    <p className="text-xs text-text-muted leading-4">Skills you will learn</p>
-                    <p className="text-[16px] font-semibold leading-6 text-text-dark">Prompt engineering basics</p>
-                    <p className="text-sm font-normal text-text-dark leading-5">
-                      Based on your recent work, it seems that you are less comfortable working with large data sets. It might help you to spend a bit of time learning this core skill before continuing in your path.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="w-full lg:w-[215px] shrink-0">
-                <div className="rounded-lg border border-border bg-white p-4 flex flex-col gap-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-base font-semibold text-black tracking-[-0.048px] leading-5">Today&apos;s plan</p>
-                    <button type="button" className="p-1 rounded hover:bg-black/5 text-text-muted" aria-label="Edit plan">
-                      <Pencil className="w-4 h-4" strokeWidth={2} />
-                    </button>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-text-dark shrink-0" strokeWidth={1.5} />
-                      <span className="text-base text-text-dark leading-6">60min session</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <img src="/xp-icon.png" alt="" className="w-5 h-5" />
-                      <span className="text-base font-semibold text-xp-orange leading-5 tracking-[-0.048px]">120 XP</span>
-                    </div>
-                  </div>
+                  {selectedBlock ? (
+                    <>
+                      <p className="text-[16px] font-semibold leading-6 text-text-dark">SQL filtering &amp; aggregation</p>
+                      <p className="text-sm font-normal text-text-dark leading-5">
+                        You completed 8 items covering WHERE, GROUP BY, HAVING, and common aggregate functions. These skills are the foundation for the advanced JOIN queries in your current block.
+                      </p>
+                    </>
+                  ) : (
+                    <ul className="flex flex-col gap-2 pl-7">
+                      <li className="text-sm text-text-dark leading-5"><span className="font-semibold">Query with confidence</span> — write SELECT statements with filters, conditions, and sorting to retrieve exactly the data you need.</li>
+                      <li className="text-sm text-text-dark leading-5"><span className="font-semibold">Master SQL joins</span> — combine data across multiple tables using INNER, LEFT, RIGHT, and FULL joins.</li>
+                      <li className="text-sm text-text-dark leading-5"><span className="font-semibold">Write efficient, quality SQL</span> — optimize performance, manage transactions, validate data, and apply best practices.</li>
+                    </ul>
+                  )}
                 </div>
               </div>
+
             </div>
           </div>
 
-          {welcomeStream.length > 0 && (
+          {!selectedBlock && (
+            <div className="mt-6 w-full">
+              <QuickRecapFlashcards />
+            </div>
+          )}
+
+          {welcomeStream.length > 0 && !selectedBlock && (
             <div className="mt-6 flex w-full flex-col gap-4">
               {recapSectionEntries.map(renderWelcomeStreamEntry)}
               {shareSectionEntries.map(renderWelcomeStreamEntry)}
@@ -1781,54 +2057,38 @@ function WelcomeBackPage({
             </div>
           </div>
 
-          {/* Transparent so main panel gradient reads as one continuous background */}
-          <div className="flex w-full shrink-0 justify-center bg-transparent px-4 pb-6 pt-4">
-            <div className="mx-auto flex w-full max-w-[820px] flex-col gap-2">
-              <div className="flex flex-wrap gap-2">
-                {!hasSkillShareUser && (
-                  <button
-                    type="button"
-                    onClick={startSkillShareFlow}
-                    className="inline-flex h-[45px] max-w-full items-center gap-2 rounded-lg border border-border bg-white px-3 py-1.5 text-left text-sm text-text-dark transition-colors hover:bg-gray-50/80"
-                  >
-                    <span className="flex w-7 shrink-0 justify-center pt-0.5">
-                      <WelcomeChipSparkle className="h-4 w-4" />
-                    </span>
-                    <span className="leading-5">Share my skill level for better personalization</span>
+          {/* Bottom bar */}
+          {!selectedBlock && <div className="flex w-full shrink-0 justify-center bg-transparent px-4 pb-6 pt-2">
+            <div className="mx-auto flex w-full max-w-[750px] flex-col gap-5">
+              {/* Assessment card — floats above input when active */}
+              {hasSkillAssessment && assessmentPhase === 'q1' && (
+                <SkillAssessmentCard options={assessmentOptionsQ1} onAnswer={handleQ1Answer} onSkip={handleAssessmentSkip} />
+              )}
+              {hasSkillAssessment && assessmentPhase === 'q2' && (
+                <SkillAssessmentCard options={assessmentOptionsQ2} onAnswer={handleQ2Answer} onSkip={handleAssessmentSkip} />
+              )}
+              {/* Suggestion chips — hide once flows have started */}
+              {!hasSkillAssessment && (!hasSkillShareUser || !hasRecapUser) && (
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" className="inline-flex h-9 items-center rounded-lg border border-border bg-white px-3 text-sm text-text-dark hover:bg-gray-50 transition-colors">
+                    Adjust learning time
                   </button>
-                )}
-                {hasSkillAssessment && (
-                  <button
-                    type="button"
-                    className="inline-flex h-[45px] max-w-full items-center gap-2 rounded-lg border border-border bg-white px-3 py-1.5 text-left text-sm font-medium text-text-dark transition-colors hover:bg-gray-50/80"
-                  >
-                    <div className="flex h-[33px] w-[33px] shrink-0 items-center justify-center rounded bg-rose-50">
-                      <NotebookPen className="h-4 w-4 text-rose-500" strokeWidth={1.75} aria-hidden />
-                    </div>
-                    <span className="leading-5">Take a quiz for better evaluation</span>
-                  </button>
-                )}
-                {!hasRecapUser && (
-                  <button
-                    type="button"
-                    onClick={startRecapFlow}
-                    className="inline-flex h-[45px] max-w-full items-center gap-2 rounded-lg border border-border bg-white px-3 py-1.5 text-left text-sm text-text-dark transition-colors hover:bg-gray-50/80"
-                  >
-                    <div className="flex h-[33px] w-[33px] shrink-0 items-center justify-center rounded bg-orange-50">
-                      <FileText className="h-4 w-4 text-orange-600" strokeWidth={1.75} aria-hidden />
-                    </div>
-                    <span className="leading-5">Recap what you learned from last session</span>
-                  </button>
-                )}
-              </div>
-              <div className="bg-white border border-border rounded-lg p-2 flex items-center gap-2 shadow-sm">
+                  {!hasSkillShareUser && (
+                    <button type="button" onClick={startSkillShareFlow} className="inline-flex h-9 items-center rounded-lg border border-border bg-white px-3 text-sm text-text-dark hover:bg-gray-50 transition-colors">
+                      Share what I know
+                    </button>
+                  )}
+                </div>
+              )}
+              {/* Chat input */}
+              <div className="bg-[#f2f5fa] rounded-lg p-2 flex items-center gap-2">
                 <button type="button" className="p-1.5 rounded hover:bg-black/5 shrink-0" aria-label="Add">
                   <Plus className="w-5 h-5 text-text-muted" />
                 </button>
                 <input
                   type="text"
-                  placeholder="Ask me anything"
-                  className="flex-1 min-w-0 bg-transparent text-base text-text-dark placeholder:text-text-muted outline-none"
+                  placeholder={hasSkillAssessment && assessmentPhase !== 'done' ? 'Answer in my own words' : 'Ask me anything'}
+                  className="flex-1 min-w-0 bg-transparent text-base text-text-dark placeholder:text-[#5b6780] outline-none"
                 />
                 <button type="button" className="p-1.5 rounded hover:bg-black/5 shrink-0" aria-label="Voice input">
                   <Mic className="w-5 h-5 text-text-muted" />
@@ -1836,16 +2096,14 @@ function WelcomeBackPage({
                 <button
                   type="button"
                   className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center hover:opacity-90 transition-opacity"
-                  style={{
-                    background: 'linear-gradient(123deg, rgb(105, 35, 222) 22%, rgb(50, 134, 255) 93%)',
-                  }}
+                  style={{ background: 'linear-gradient(123deg, rgb(105, 35, 222) 22%, rgb(50, 134, 255) 93%)' }}
                   aria-label="Send"
                 >
                   <ArrowUp className="w-4 h-4 text-white" strokeWidth={2.5} />
                 </button>
               </div>
             </div>
-          </div>
+          </div>}
         </div>
       </main>
     </div>
